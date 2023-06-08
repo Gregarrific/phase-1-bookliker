@@ -1,3 +1,6 @@
+//Don't have a method for user login so setting variable for username
+const userData = {'id': 11, 'username':'kramer'}
+//Event Listeners
 document.addEventListener("DOMContentLoaded", loadBooks());
 function loadBooks() {
     fetch('http://localhost:3000/books')
@@ -7,6 +10,7 @@ function loadBooks() {
         createBookElements(bookList);
     })
 }
+//Functions
 function createBookElements(bookList) {
     let list = document.getElementById('list');
     bookList.forEach(book => {
@@ -21,7 +25,7 @@ function bookDetails(event) {
     let bookData = event.target.id.split('-');
     fetch(`http://localhost:3000/books/${bookData[1]}`)
     .then(response => response.json())
-    .then(event => showBookDetails(event));
+    .then(json => showBookDetails(json));
 
 }
 function showBookDetails(bookInfo) {
@@ -44,9 +48,21 @@ function showBookDetails(bookInfo) {
     let likeBtn = document.createElement('button');
     likeBtn.innerText = 'Like';
     bookPanel.appendChild(likeBtn);
-    let bookID = bookInfo.id;
-    likeBtn.addEventListener('click', event => updateLikes(bookID));
+    likeBtn.addEventListener('click', event => updateLikes(bookInfo));
 }
-function updateLikes(bookID) {
-    console.log(`Got a like for book ${bookID}`);
+function updateLikes(bookInfo) {
+    //Has the user already liked the book?
+    const dataTest = bookInfo.users.find(({username}) => username === userData.username)
+    if (dataTest) {
+        bookInfo.users.pop({'id': userData.id, 'username': userData.username});
+    } else {
+        bookInfo.users.push({'id': userData.id, 'username': userData.username});
+    };
+    fetch(`http://localhost:3000/books/${bookInfo.id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({'users': bookInfo.users})
+        })
+        .then(response => response.json())
+        .then(json => showBookDetails(json));
 }
